@@ -6,6 +6,10 @@ param(
 <# CIAOPS
 Script provided as is. Use at own risk. No guarantees or warranty provided.
 Description - Log to Exchange Online using the V2 module
+An active Exchange Online connection in the current PowerShell process is reused.
+Security & Compliance connections do not count as Exchange Online connections.
+Older modules are checked for an open Exchange Online remote PowerShell session.
+The -noprompt switch skips installation/update questions, not authentication when needed.
 Reference - https://docs.microsoft.com/en-us/powershell/exchange/exchange-online/exchange-online-powershell-v2/exchange-online-powershell-v2?view=exchange-ps
 Source - https://github.com/directorcia/Office365/blob/master/o365-connect-exo.ps1
 Prerequisites = 1
@@ -43,8 +47,8 @@ else {
     if (-not $noprompt) {
         do {
             $response = read-host -Prompt "`nDo you wish to install the Exchange Online PowerShell module (Y/N)?"
-        } until (-not [string]::isnullorempty($response))
-        if ($response -eq 'Y' -or $response -eq 'y') {
+        } until ($response -match '^[YyNn]$')
+        if ($response -eq 'Y') {
             write-host -foregroundcolor $processmessagecolor "Installing PowerShellGet module - Administration escalation required"
             Start-Process powershell -Verb runAs -ArgumentList "Install-Module PowershellGet -Force" -wait -WindowStyle Hidden       
             write-host -foregroundcolor $processmessagecolor "Installing Exchange Online PowerShell module - Administration escalation required"
@@ -69,29 +73,29 @@ else {
 }
 if (-not $noupdate) {
     write-host -foregroundcolor $processmessagecolor "Check whether newer version of Exchange Online PowerShell module is available"
-    #get version of the module (selects the first if there are more versions installed)
-    $version = (Get-InstalledModule -name ExchangeOnlineManagement) | Sort-Object Version -Descending  | Select-Object Version -First 1
-    #get version of the module in psgallery
-    $psgalleryversion = Find-Module -Name ExchangeOnlineManagement | Sort-Object Version -Descending | Select-Object Version -First 1
-    #convert to string for comparison
-    $stringver = $version | Select-Object @{n='ModuleVersion'; e={$_.Version -as [string]}}
-    $a = $stringver | Select-Object Moduleversion -ExpandProperty Moduleversion
-    #convert to string for comparison
-    $onlinever = $psgalleryversion | Select-Object @{n='OnlineVersion'; e={$_.Version -as [string]}}
-    $b = $onlinever | Select-Object OnlineVersion -ExpandProperty OnlineVersion
-    #version compare
-    if ([version]"$a" -ge [version]"$b") {
-        Write-Host -foregroundcolor $processmessagecolor "Local module $a greater or equal to Gallery module $b"
+    try {
+        $localversion = (Get-InstalledModule -Name ExchangeOnlineManagement -ErrorAction Stop | Sort-Object Version -Descending | Select-Object -First 1).Version
+        $galleryversion = (Find-Module -Name ExchangeOnlineManagement -ErrorAction Stop | Sort-Object Version -Descending | Select-Object -First 1).Version
+    }
+    catch {
+        Write-Host -ForegroundColor $warningmessagecolor "Unable to determine module versions ($($_.Exception.Message)). Skipping update check"
+        $localversion = $null
+    }
+    if ($null -eq $localversion) {
+        ## version check skipped
+    }
+    elseif ([version]$localversion -ge [version]$galleryversion) {
+        Write-Host -foregroundcolor $processmessagecolor "Local module $localversion greater or equal to Gallery module $galleryversion"
         write-host -foregroundcolor $processmessagecolor "No update required"
     }
     else {
-        Write-Host -foregroundcolor $warningmessagecolor "Local module $a lower version than Gallery module $b"
+        Write-Host -foregroundcolor $warningmessagecolor "Local module $localversion lower version than Gallery module $galleryversion"
         write-host -foregroundcolor $warningmessagecolor "Update recommended"
         if (-not $noprompt) {
             do {
                 $response = read-host -Prompt "`nDo you wish to update the Exchange Online PowerShell module (Y/N)?"
-            } until (-not [string]::isnullorempty($response))
-            if ($result -eq 'Y' -or $result -eq 'y') {
+            } until ($response -match '^[YyNn]$')
+            if ($response -eq 'Y') {
                 write-host -foregroundcolor $processmessagecolor "Updating Exchange Online PowerShell module - Administration escalation required"
                 Start-Process powershell -Verb runAs -ArgumentList "update-Module -Name ExchangeOnlineManagement -Force -confirm:$false" -wait -WindowStyle Hidden
                 write-host -foregroundcolor $processmessagecolor "Exchange Online PowerShell module - updated"
@@ -122,17 +126,67 @@ catch {
 write-host -foregroundcolor $processmessagecolor "Exchange Online PowerShell module loaded"
 
 ## Connect to Exchange Online service
-write-host -foregroundcolor $processmessagecolor "Connecting to Exchange Online"
+$connected = $false
 try {
-    $result = Connect-ExchangeOnline -ShowProgress:$false -ShowBanner:$false | Out-Null
+    if (Get-Command -Name Get-ConnectionInformation -ErrorAction SilentlyContinue) {
+        $activeConnection = Get-ConnectionInformation -ErrorAction Stop | Where-Object {
+            $_.State -eq 'Connected' -and $_.TokenStatus -eq 'Active' -and $_.IsEopSession -eq $false
+        } | Select-Object -First 1
+        $connected = $null -ne $activeConnection
+    }
+    else {
+        $activeSession = Get-PSSession -ErrorAction Stop | Where-Object {
+            $_.ConfigurationName -eq 'Microsoft.Exchange' -and
+            $_.ComputerName -eq 'outlook.office365.com' -and $_.State -eq 'Opened'
+        } | Select-Object -First 1
+        $connected = $null -ne $activeSession
+    }
 }
 catch {
+    Write-Host -ForegroundColor $warningmessagecolor "Unable to check existing Exchange Online connections ($($_.Exception.Message)). A new connection will be attempted."
+}
+$connectparams = (Get-Command Connect-ExchangeOnline).Parameters
+if ($connected) {
+    Write-Host -ForegroundColor $processmessagecolor "Already connected to Exchange Online - skipping reconnect."
+}
+else {
+    write-host -foregroundcolor $processmessagecolor "Connecting to Exchange Online"
+    try {
+        Connect-ExchangeOnline -ShowProgress:$false -ShowBanner:$false -ErrorAction Stop | Out-Null
+        $connected = $true
+    }
+    catch {
+        Write-Host -ForegroundColor $warningmessagecolor "Primary connect failed ($($_.Exception.Message))"
+    }
+}
+if (-not $connected -and $connectparams.ContainsKey('UseWebLogin')) {      ## UseWebLogin removed in module v3+
+    Write-Host -ForegroundColor $warningmessagecolor "Retrying with web login..."
+    try {
+        Disconnect-ExchangeOnline -Confirm:$false -ErrorAction SilentlyContinue
+        Connect-ExchangeOnline -UseWebLogin -ShowBanner:$false -ErrorAction Stop | Out-Null
+        $connected = $true
+    }
+    catch {
+        Write-Host -ForegroundColor $warningmessagecolor "Web login failed ($($_.Exception.Message))"
+    }
+}
+if (-not $connected -and $connectparams.ContainsKey('Device') -and $PSVersionTable.PSVersion.Major -ge 7) {    ## Device code requires PowerShell 7+
+    Write-Host -ForegroundColor $warningmessagecolor "Retrying with device code..."
+    try {
+        Disconnect-ExchangeOnline -Confirm:$false -ErrorAction SilentlyContinue
+        Connect-ExchangeOnline -Device -ShowBanner:$false -ErrorAction Stop | Out-Null
+        $connected = $true
+    }
+    catch {
+        Write-Host -ForegroundColor $warningmessagecolor "Device code login failed ($($_.Exception.Message))"
+    }
+}
+if (-not $connected) {
     Write-Host -ForegroundColor $errormessagecolor "[003] - Unable to connect to Exchange Online`n"
-    Write-Host -ForegroundColor $errormessagecolor $_.Exception.Message
     if ($debug) {
         Stop-Transcript | Out-Null                 ## Terminate transcription
     }
-    exit 3 
+    exit 3
 }
 
 write-host -foregroundcolor $processmessagecolor "Connected to Exchange Online`n"

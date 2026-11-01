@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Office365 Docs Experience Hub</title>
+  <meta name="description" content="Visual launchpad for docs experiences in this directory.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink-1: #1a2033;
+      --ink-2: #4b5371;
+      --line: #d7ccbb;
+      --sand: #f7f0e4;
+      --cream: #fffaf2;
+      --blue-hero: #13325e;
+      --blue-hero-2: #1f4c8a;
+      --teal: #0f9a91;
+      --orange: #db6a32;
+      --rose: #bc385f;
+      --violet: #4e4fbd;
+      --glow: 0 24px 56px rgba(11, 23, 46, 0.28);
+      --radius-xl: 24px;
+      --radius-lg: 18px;
+      --radius-md: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Outfit", "Segoe UI", sans-serif;
+      color: var(--ink-1);
+      min-height: 100vh;
+      overflow-x: hidden;
+      background:
+        radial-gradient(1400px 700px at -5% -20%, rgba(87, 136, 232, 0.33), transparent 58%),
+        radial-gradient(980px 540px at 110% -8%, rgba(34, 201, 196, 0.26), transparent 56%),
+        linear-gradient(150deg, #0f1f3c 0%, #17345e 45%, #21437a 100%);
+      transition: background 420ms ease;
+    }
+
+    body::before,
+    body::after {
+      content: "";
+      position: fixed;
+      inset: -18% -10%;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    body::before {
+      background:
+        radial-gradient(34% 30% at 20% 30%, rgba(48, 193, 180, 0.22), transparent 72%),
+        radial-gradient(34% 30% at 78% 26%, rgba(255, 152, 88, 0.18), transparent 74%),
+        radial-gradient(40% 40% at 50% 80%, rgba(118, 126, 255, 0.2), transparent 70%);
+      filter: blur(8px);
+      animation: driftLayerA 26s linear infinite;
+      opacity: 0.7;
+      transform-origin: center;
+    }
+
+    body::after {
+      background:
+        conic-gradient(from 0deg at 10% 20%, rgba(255, 255, 255, 0.08), transparent 46%),
+        conic-gradient(from 90deg at 82% 14%, rgba(123, 222, 215, 0.08), transparent 42%),
+        conic-gradient(from 180deg at 54% 82%, rgba(255, 173, 109, 0.07), transparent 45%);
+      mix-blend-mode: screen;
+      animation: driftLayerB 38s linear infinite;
+      opacity: 0.55;
+    }
+
+    body[data-energy="calm"] {
+      background:
+        radial-gradient(1400px 700px at -5% -20%, rgba(87, 136, 232, 0.25), transparent 60%),
+        radial-gradient(980px 540px at 110% -8%, rgba(34, 201, 196, 0.18), transparent 58%),
+        linear-gradient(150deg, #122240 0%, #19365e 48%, #254778 100%);
+    }
+
+    body[data-energy="calm"]::before {
+      opacity: 0.42;
+      animation-duration: 44s;
+      filter: blur(10px);
+    }
+
+    body[data-energy="calm"]::after {
+      opacity: 0.32;
+      animation-duration: 58s;
+    }
+
+    body[data-energy="vivid"] {
+      background:
+        radial-gradient(1450px 740px at -8% -25%, rgba(87, 136, 232, 0.42), transparent 57%),
+        radial-gradient(1020px 600px at 112% -10%, rgba(34, 201, 196, 0.35), transparent 54%),
+        linear-gradient(150deg, #0d1d39 0%, #153765 42%, #24508f 100%);
+    }
+
+    body[data-energy="vivid"]::before {
+      opacity: 0.84;
+      animation-duration: 20s;
+      filter: blur(7px);
+    }
+
+    body[data-energy="vivid"]::after {
+      opacity: 0.72;
+      animation-duration: 30s;
+    }
+
+    .shell {
+      width: min(1120px, calc(100% - 2rem));
+      margin: 1.1rem auto 2.3rem;
+      display: grid;
+      gap: 1.05rem;
+    }
+
+    .panel {
+      background: linear-gradient(165deg, var(--sand), var(--cream));
+      border: 1px solid var(--line);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--glow);
+      padding: 1.2rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero {
+      background:
+        radial-gradient(500px 220px at 20% -10%, rgba(255, 255, 255, 0.25), transparent 70%),
+        linear-gradient(150deg, var(--blue-hero), var(--blue-hero-2));
+      color: #f7fbff;
+      border: 1px solid rgba(203, 223, 255, 0.34);
+      padding: 1.35rem;
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      width: 300px;
+      height: 300px;
+      border-radius: 999px;
+      right: -110px;
+      top: -130px;
+      border: 2px dashed rgba(151, 206, 255, 0.45);
+      transform: rotate(-16deg);
+      pointer-events: none;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      width: 240px;
+      height: 12px;
+      border-radius: 999px;
+      left: 1.35rem;
+      bottom: 1.15rem;
+      background: linear-gradient(90deg, rgba(61, 219, 213, 0.9), rgba(255, 196, 102, 0.85));
+      pointer-events: none;
+    }
+
+    .kicker {
+      margin: 0;
+      font-family: "IBM Plex Mono", Consolas, monospace;
+      font-size: 0.72rem;
+      color: #b8ddff;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0.5rem 0 0;
+      font-size: clamp(1.75rem, 4.6vw, 3rem);
+      line-height: 1.1;
+      max-width: 20ch;
+    }
+
+    .subtitle {
+      margin: 0.65rem 0 0;
+      font-size: 1.02rem;
+      color: #d6e8ff;
+      max-width: 64ch;
+      line-height: 1.55;
+    }
+
+    .meta-row {
+      margin-top: 1rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      border: 1px solid #b7cbe8;
+      background: rgba(255, 255, 255, 0.16);
+      color: #ecf6ff;
+      font-size: 0.76rem;
+      padding: 0.26rem 0.6rem;
+    }
+
+    .quick-links {
+      margin-top: 1rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.55rem;
+    }
+
+    .energy-row {
+      margin-top: 0.8rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.55rem;
+    }
+
+    .energy-label {
+      margin: 0;
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #c7e2ff;
+      font-family: "IBM Plex Mono", Consolas, monospace;
+    }
+
+    .energy-toggle {
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid rgba(183, 209, 242, 0.5);
+      border-radius: 999px;
+      padding: 0.2rem;
+      background: rgba(255, 255, 255, 0.12);
+      gap: 0.2rem;
+    }
+
+    .energy-btn {
+      border: 1px solid transparent;
+      border-radius: 999px;
+      background: transparent;
+      color: #dbeeff;
+      font: inherit;
+      font-size: 0.76rem;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      padding: 0.3rem 0.62rem;
+      cursor: pointer;
+      transition: background 180ms ease, color 180ms ease, transform 180ms ease;
+    }
+
+    .energy-btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .energy-btn.active {
+      background: linear-gradient(120deg, rgba(29, 189, 178, 0.95), rgba(108, 220, 186, 0.95));
+      color: #053437;
+      border-color: rgba(174, 244, 219, 0.6);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    .quick-link {
+      text-decoration: none;
+      border-radius: 999px;
+      padding: 0.47rem 0.92rem;
+      font-weight: 700;
+      font-size: 0.81rem;
+      color: #fff;
+      transition: transform 180ms ease, box-shadow 180ms ease;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      box-shadow: 0 10px 18px rgba(0, 0, 0, 0.2);
+    }
+
+    .quick-link.primary {
+      background: linear-gradient(125deg, var(--teal), #1ec3b9);
+    }
+
+    .quick-link.secondary {
+      background: linear-gradient(125deg, var(--orange), #ec8d54);
+    }
+
+    .quick-link:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 22px rgba(14, 22, 33, 0.26);
+    }
+
+    .stats {
+      margin-top: 0.92rem;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.6rem;
+    }
+
+    .stat {
+      border: 1px solid rgba(181, 206, 238, 0.45);
+      border-radius: var(--radius-md);
+      background: rgba(255, 255, 255, 0.12);
+      padding: 0.55rem 0.65rem;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 1.15rem;
+      line-height: 1.05;
+      color: #ffffff;
+    }
+
+    .stat span {
+      font-size: 0.76rem;
+      color: #d6e8ff;
+    }
+
+    .composer {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+      gap: 0.95rem;
+      align-items: stretch;
+    }
+
+    .spotlight {
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      background: linear-gradient(160deg, #fff6e8, #fffdf7);
+      padding: 0.9rem;
+      display: grid;
+      gap: 0.65rem;
+    }
+
+    .spotlight-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .spotlight-title {
+      margin: 0;
+      font-size: 1.24rem;
+      line-height: 1.2;
+    }
+
+    .spotlight-copy {
+      margin: 0;
+      color: var(--ink-2);
+      line-height: 1.5;
+      font-size: 0.95rem;
+      min-height: 3rem;
+    }
+
+    .spotlight-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+    }
+
+    .spotlight-tag {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      border: 1px solid #cdbca0;
+      background: #f7ebd6;
+      color: #4f5365;
+      font-size: 0.68rem;
+      font-family: "IBM Plex Mono", Consolas, monospace;
+      padding: 0.15rem 0.45rem;
+    }
+
+    .spotlight-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .spotlight-cta {
+      text-decoration: none;
+      border-radius: 10px;
+      background: linear-gradient(125deg, #1a9089, #29bbb2);
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.84rem;
+      padding: 0.48rem 0.75rem;
+      border: 1px solid rgba(22, 112, 108, 0.45);
+      transition: transform 170ms ease;
+    }
+
+    .spotlight-cta:hover {
+      transform: translateY(-1px);
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: 1fr 200px;
+      gap: 0.7rem;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      background: linear-gradient(160deg, rgba(255, 248, 236, 0.9), rgba(255, 255, 255, 0.72));
+      padding: 0.9rem;
+    }
+
+    .search-wrap {
+      display: grid;
+      gap: 0.35rem;
+    }
+
+    label {
+      font-size: 0.78rem;
+      color: var(--ink-2);
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    input,
+    select {
+      width: 100%;
+      border: 1px solid #cfbea1;
+      background: #fffdfa;
+      color: var(--ink-1);
+      border-radius: 11px;
+      height: 2.5rem;
+      font: inherit;
+      padding: 0 0.7rem;
+    }
+
+    .summary {
+      margin: 0.3rem 0 0;
+      color: var(--ink-2);
+      font-size: 0.85rem;
+    }
+
+    .legend-row {
+      margin-top: 0.7rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+
+    .legend .chip {
+      font-family: "IBM Plex Mono", Consolas, monospace;
+      border: 1px solid #d4c7b0;
+      background: #f4e8d5;
+      color: #46556d;
+      font-size: 0.69rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.75rem;
+    }
+
+    .entry {
+      border-radius: var(--radius-lg);
+      border: 1px solid #cdbd9f;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(248, 239, 223, 0.86));
+      padding: 0.95rem;
+      animation: cardLift 380ms ease both;
+      transition: transform 180ms ease, box-shadow 180ms ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .entry::after {
+      content: "";
+      position: absolute;
+      top: -28px;
+      right: -28px;
+      width: 90px;
+      height: 90px;
+      border-radius: 999px;
+      background: radial-gradient(circle, rgba(27, 154, 145, 0.2), transparent 70%);
+      pointer-events: none;
+    }
+
+    .entry.variant-navigation::after {
+      background: radial-gradient(circle, rgba(78, 79, 189, 0.22), transparent 72%);
+    }
+
+    .entry.variant-simulator::after {
+      background: radial-gradient(circle, rgba(219, 106, 50, 0.2), transparent 70%);
+    }
+
+    .entry:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 16px 24px rgba(14, 21, 33, 0.14);
+    }
+
+    .entry h3 {
+      margin: 0;
+      font-size: 1.02rem;
+      line-height: 1.28;
+    }
+
+    .entry h3 a {
+      color: #1c3350;
+      text-decoration: none;
+    }
+
+    .entry h3 a:hover {
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 2px;
+    }
+
+    .entry-summary {
+      margin: 0.5rem 0 0;
+      font-size: 0.86rem;
+      color: var(--ink-2);
+      line-height: 1.4;
+      min-height: 2.45rem;
+    }
+
+    .entry-track {
+      margin-top: 0.55rem;
+      height: 6px;
+      border-radius: 999px;
+      background: #eadbc2;
+      overflow: hidden;
+    }
+
+    .entry-track span {
+      display: block;
+      height: 100%;
+      width: var(--track, 72%);
+      border-radius: 999px;
+      background: linear-gradient(90deg, #1a9c93, #3ab5ae);
+    }
+
+    .entry.variant-navigation .entry-track span {
+      background: linear-gradient(90deg, #5459c5, #7678d8);
+      width: 58%;
+    }
+
+    .entry.variant-simulator .entry-track span {
+      background: linear-gradient(90deg, #d16635, #ef9654);
+      width: 88%;
+    }
+
+    .entry-meta {
+      margin-top: 0.55rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      border: 1px solid #ccb998;
+      background: #f4e8d3;
+      color: #41526a;
+      font-size: 0.67rem;
+      font-family: "IBM Plex Mono", Consolas, monospace;
+      padding: 0.15rem 0.45rem;
+    }
+
+    .badge.group {
+      border-color: #b9cae6;
+      background: #e6effa;
+      color: #35507c;
+    }
+
+    .empty {
+      border: 1px dashed #c8b594;
+      border-radius: var(--radius-md);
+      padding: 0.9rem;
+      color: var(--ink-2);
+      background: rgba(255, 255, 255, 0.45);
+    }
+
+    .footer-note {
+      color: var(--ink-2);
+      font-size: 0.82rem;
+      line-height: 1.45;
+    }
+
+    @keyframes cardLift {
+      from {
+        opacity: 0;
+        transform: translateY(7px) scale(0.99);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @keyframes driftLayerA {
+      0% {
+        transform: translate3d(0, 0, 0) scale(1);
+      }
+      50% {
+        transform: translate3d(-1.2%, 1.5%, 0) scale(1.03);
+      }
+      100% {
+        transform: translate3d(0, 0, 0) scale(1);
+      }
+    }
+
+    @keyframes driftLayerB {
+      0% {
+        transform: translate3d(0, 0, 0) rotate(0deg);
+      }
+      50% {
+        transform: translate3d(1.5%, -1.1%, 0) rotate(2deg);
+      }
+      100% {
+        transform: translate3d(0, 0, 0) rotate(0deg);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      body::before,
+      body::after {
+        animation: none;
+      }
+
+      .entry,
+      .quick-link,
+      .spotlight-cta,
+      .energy-btn {
+        transition: none;
+      }
+    }
+
+    @media (max-width: 940px) {
+      .composer {
+        grid-template-columns: 1fr;
+      }
+
+      .grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .toolbar {
+        grid-template-columns: 1fr;
+      }
+
+      .stats {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 700px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      h1 {
+        max-width: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="panel hero">
+      <p class="kicker">Office365 Documentation Experience Hub</p>
+      <h1>Explore your simulation experiences with a cleaner, richer launch page</h1>
+      <p class="subtitle">
+        Pick a path, open it instantly, and jump between identity and mail security walkthroughs without scanning a technical file index.
+      </p>
+      <div class="meta-row">
+        <span class="chip">Docs-only scope</span>
+        <span class="chip">Built for GitHub Pages</span>
+        <span class="chip" id="updatedChip">Updated: loading</span>
+      </div>
+      <div class="quick-links">
+        <a class="quick-link primary" href="m365-login-sim.html">Sign-In Simulator</a>
+        <a class="quick-link secondary" href="m365-mail-security-sim.html">Mail Security Simulator</a>
+        <a class="quick-link secondary" href="image-comparison.html">Image Comparison</a>
+      </div>
+      <div class="energy-row" aria-label="Background mode selector">
+        <p class="energy-label">Background mode</p>
+        <div class="energy-toggle" role="radiogroup" aria-label="Background energy mode">
+          <button class="energy-btn" type="button" id="energyCalm" role="radio" aria-checked="false">Calm</button>
+          <button class="energy-btn" type="button" id="energyVivid" role="radio" aria-checked="false">Vivid</button>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat">
+          <strong id="statTotal">0</strong>
+          <span>Docs pages indexed</span>
+        </div>
+        <div class="stat">
+          <strong id="statSim">0</strong>
+          <span>Interactive simulators</span>
+        </div>
+        <div class="stat">
+          <strong>100%</strong>
+          <span>Content from docs directory</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="composer">
+        <article class="spotlight" id="spotlight">
+          <div class="spotlight-top">
+            <p class="kicker" id="spotlightKicker">Now featuring</p>
+            <span class="spotlight-tag" id="spotlightType">Simulator</span>
+          </div>
+          <h2 class="spotlight-title" id="spotlightTitle">Loading...</h2>
+          <p class="spotlight-copy" id="spotlightCopy">Loading description...</p>
+          <div class="spotlight-tags" id="spotlightTags"></div>
+          <div class="spotlight-actions">
+            <a class="spotlight-cta" id="spotlightLink" href="index.html" target="_blank" rel="noopener noreferrer">Open experience</a>
+          </div>
+        </article>
+
+        <div class="toolbar">
+          <div class="search-wrap">
+            <label for="searchInput">Find an experience</label>
+            <input id="searchInput" type="search" placeholder="Try: login, mail, simulator, docs home">
+          </div>
+          <div class="search-wrap">
+            <label for="groupSelect">View</label>
+            <select id="groupSelect">
+              <option value="all">All experiences</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="legend-row">
+        <p class="summary" id="summaryLine"></p>
+        <div class="legend">
+          <span class="chip">Hover or click cards to change spotlight</span>
+          <span class="chip">Every link opens a docs file</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="grid" id="entryGrid"></div>
+      <div class="empty" id="emptyState" hidden>No matches found. Try a broader search or switch to All experiences.</div>
+    </section>
+
+    <section class="panel footer-note">
+      Scope lock: this page intentionally surfaces docs files only, so navigation stays simple and focused.
+    </section>
+  </main>
+
+  <script>
+    const inventory = [
+      {
+        path: "index.html",
+        title: "Docs Home",
+        summary: "Your visual home screen for docs content and quick experience switching.",
+        group: "Navigation",
+        intensity: 58,
+        tags: ["launchpad", "overview", "docs"]
+      },
+      {
+        path: "m365-login-sim.html",
+        title: "M365 Sign-In and Conditional Access Simulator",
+        summary: "Follow identity signals, policy checks, and access decisions through guided scenario paths.",
+        group: "Simulator",
+        intensity: 88,
+        tags: ["identity", "conditional-access", "security"]
+      },
+      {
+        path: "m365-mail-security-sim.html",
+        title: "Exchange + Defender Mail Security Simulator",
+        summary: "Visualize message handling across authentication, filtering, and post-delivery protection stages.",
+        group: "Simulator",
+        intensity: 92,
+        tags: ["exchange", "defender", "mailflow"]
+      }
+    ];
+
+    function extOf(path) {
+      const i = path.lastIndexOf(".");
+      return i >= 0 ? path.slice(i + 1).toLowerCase() : "file";
+    }
+
+    function slug(path) {
+      return path
+        .split("/")
+        .map((segment) => encodeURIComponent(segment))
+        .join("/");
+    }
+
+    const data = inventory.map((item) => ({
+      path: item.path,
+      title: item.title,
+      summary: item.summary,
+      ext: extOf(item.path),
+      group: item.group
+    }));
+
+    const groupSelect = document.getElementById("groupSelect");
+    const searchInput = document.getElementById("searchInput");
+    const entryGrid = document.getElementById("entryGrid");
+    const summaryLine = document.getElementById("summaryLine");
+    const emptyState = document.getElementById("emptyState");
+    const spotlightKicker = document.getElementById("spotlightKicker");
+    const spotlightType = document.getElementById("spotlightType");
+    const spotlightTitle = document.getElementById("spotlightTitle");
+    const spotlightCopy = document.getElementById("spotlightCopy");
+    const spotlightTags = document.getElementById("spotlightTags");
+    const spotlightLink = document.getElementById("spotlightLink");
+    const energyCalm = document.getElementById("energyCalm");
+    const energyVivid = document.getElementById("energyVivid");
+
+    const groups = [...new Set(data.map((item) => item.group))].sort((a, b) => a.localeCompare(b));
+    groups.forEach((group) => {
+      const option = document.createElement("option");
+      option.value = group;
+      option.textContent = group;
+      groupSelect.appendChild(option);
+    });
+
+    function setSpotlight(item) {
+      spotlightKicker.textContent = item.group === "Simulator" ? "Featured walkthrough" : "Navigation";
+      spotlightType.textContent = item.group;
+      spotlightTitle.textContent = item.title;
+      spotlightCopy.textContent = item.summary;
+      spotlightLink.href = slug(item.path);
+      spotlightLink.textContent = "Open " + item.title;
+
+      spotlightTags.innerHTML = "";
+      item.tags.forEach((tag) => {
+        const el = document.createElement("span");
+        el.className = "spotlight-tag";
+        el.textContent = tag;
+        spotlightTags.appendChild(el);
+      });
+    }
+
+    function applyEnergyMode(mode) {
+      const selected = mode === "vivid" ? "vivid" : "calm";
+      document.body.setAttribute("data-energy", selected);
+      energyCalm.classList.toggle("active", selected === "calm");
+      energyVivid.classList.toggle("active", selected === "vivid");
+      energyCalm.setAttribute("aria-checked", String(selected === "calm"));
+      energyVivid.setAttribute("aria-checked", String(selected === "vivid"));
+      try {
+        localStorage.setItem("docsHub.energyMode", selected);
+      } catch {
+      }
+    }
+
+    function render() {
+      const search = searchInput.value.trim().toLowerCase();
+      const selectedGroup = groupSelect.value;
+      const filtered = data.filter((item) => {
+        const groupMatch = selectedGroup === "all" || item.group === selectedGroup;
+        const searchPool = (item.path + " " + item.title + " " + item.summary).toLowerCase();
+        const searchMatch = !search || searchPool.includes(search);
+        return groupMatch && searchMatch;
+      });
+
+      entryGrid.innerHTML = "";
+      emptyState.hidden = filtered.length !== 0;
+
+      filtered
+        .sort((a, b) => a.path.localeCompare(b.path, undefined, { sensitivity: "base" }))
+        .forEach((item, index) => {
+          const card = document.createElement("article");
+          card.className = "entry " + (item.group === "Simulator" ? "variant-simulator" : "variant-navigation");
+          card.style.animationDelay = String(Math.min(index * 12, 220)) + "ms";
+          card.style.setProperty("--track", String(item.intensity) + "%");
+
+          const title = item.title;
+          const linkTarget = slug(item.path);
+          const linkAttr = "target=\"_blank\" rel=\"noopener noreferrer\"";
+          const clickHint = "Open";
+
+          card.innerHTML = [
+            "<h3><a href=\"" + linkTarget + "\" " + linkAttr + ">" + title + "</a></h3>",
+            "<p class=\"entry-summary\">" + item.summary + "</p>",
+            "<div class=\"entry-track\"><span></span></div>",
+            "<div class=\"entry-meta\">",
+            "<span class=\"badge group\">" + item.group + "</span>",
+            "<span class=\"badge\">" + item.ext + "</span>",
+            "<span class=\"badge\">" + item.path + "</span>",
+            "<span class=\"badge\">" + clickHint + "</span>",
+            "</div>"
+          ].join("");
+
+          card.addEventListener("mouseenter", () => setSpotlight(item));
+          card.addEventListener("focusin", () => setSpotlight(item));
+          card.addEventListener("click", () => setSpotlight(item));
+
+          entryGrid.appendChild(card);
+        });
+
+      summaryLine.textContent = "Showing " + filtered.length + " of " + data.length + " docs experiences.";
+
+      if (filtered.length > 0) {
+        setSpotlight(filtered[0]);
+      }
+    }
+
+    searchInput.addEventListener("input", render);
+    groupSelect.addEventListener("change", render);
+    energyCalm.addEventListener("click", () => applyEnergyMode("calm"));
+    energyVivid.addEventListener("click", () => applyEnergyMode("vivid"));
+
+    document.getElementById("updatedChip").textContent = "Updated: " + new Date().toLocaleDateString();
+    document.getElementById("statTotal").textContent = String(data.length);
+    document.getElementById("statSim").textContent = String(data.filter((item) => item.group === "Simulator").length);
+    let initialEnergyMode = "calm";
+    try {
+      const storedMode = localStorage.getItem("docsHub.energyMode");
+      if (storedMode === "calm" || storedMode === "vivid") {
+        initialEnergyMode = storedMode;
+      } else if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: no-preference)").matches) {
+        initialEnergyMode = "vivid";
+      }
+    } catch {
+    }
+    applyEnergyMode(initialEnergyMode);
+    setSpotlight(data[0]);
+    render();
+  </script>
+</body>
+</html>
